@@ -5,7 +5,7 @@
 #include <source_location>
 
 #include "LogHelper.hpp"
-#include "Window/ClassManager.hpp"
+#include "StringHelper.hpp"
 
 namespace Flame {
   enum class LogLevel {
@@ -18,29 +18,33 @@ namespace Flame {
     template <typename... Args>
     static void Log(LogLevel level, std::wformat_string<Args...> fmt, Args&&... args) {
       std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
-      std::wstring result = GetLogPrefix(level) + message + L'\n';
-
-      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-      if (hConsole != INVALID_HANDLE_VALUE) {
-        std::string output = LogHelper::WideToUtf8(result);
-        WriteFile(hConsole, output.c_str(), output.size(), nullptr, nullptr);
-      }
+      std::wstring result = GetLogPrefixW(level) + message;
+      std::wcout << result << std::endl;
     }
 
     template <typename... Args>
     static void Log(std::source_location location, LogLevel level, std::wformat_string<Args...> fmt, Args&&... args) {
       std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
-      std::wstring result = GetLocationPrefix(location) + GetLogPrefix(level) + message + L'\n';
+      std::wstring result = GetLocationPrefixW(location) + GetLogPrefixW(level) + message;
+      std::wcout << result << std::endl;
+    }
 
-      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-      if (hConsole != INVALID_HANDLE_VALUE) {
-        std::string output = LogHelper::WideToUtf8(result);
-        WriteFile(hConsole, output.c_str(), output.size(), nullptr, nullptr);
-      }
+    template <typename... Args>
+    static void Log(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
+      std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
+      std::string result = StringHelper::WideToUtf8(GetLogPrefixW(level)) + message;
+      std::cout << result << std::endl;
+    }
+
+    template <typename... Args>
+    static void Log(std::source_location location, LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
+      std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
+      std::string result = StringHelper::WideToUtf8(GetLocationPrefixW(location) + GetLogPrefixW(level)) + message;
+      std::cout << result << std::endl;
     }
 
   private:
-    static std::wstring GetLocationPrefix(std::source_location location) {
+    static std::wstring GetLocationPrefixW(std::source_location location) {
       std::string filename(location.file_name());
       std::wstring wFilename(filename.begin(), filename.end());
       u32 line = location.line();
@@ -49,7 +53,7 @@ namespace Flame {
       return locationStr;
     }
 
-    static std::wstring GetLogPrefix(LogLevel level) {
+    static std::wstring GetLogPrefixW(LogLevel level) {
       auto now = std::chrono::system_clock::now();
       auto seconds = std::chrono::floor<std::chrono::seconds>(now);
       std::wstring timestamp = std::format(L"[{:%H:%M:%S}]", seconds);

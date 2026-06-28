@@ -1,6 +1,8 @@
 #pragma once
 #include <array>
 #include <DirectXMath.h>
+
+#include "glm/vec2.hpp"
 #include "Utils/Types.hpp"
 
 namespace Flame {
@@ -24,5 +26,6 @@ namespace Flame {
 
   private:
     std::array<KeyState, kKeyCount> m_keyStates { KeyState::Up };
+    glm::ivec2 m_mousePos;
   };
 }

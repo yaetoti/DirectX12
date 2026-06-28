@@ -9,9 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_definitions(
   -DUNICODE
   -D_UNICODE
+  -DGLM_ENABLE_EXPERIMENTAL
 )
 
-# Output crutch
 if (MSVC)
   add_compile_options(/utf-8)
 endif ()

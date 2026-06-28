@@ -28,17 +28,5 @@ namespace Flame {
       LocalFree(messageBuffer);
       return message;
     }
-
-    static std::string WideToUtf8(const std::wstring& s) {
-      if (s.empty()) {
-        return {};
-      }
-
-      int size_needed = WideCharToMultiByte(CP_UTF8, 0, &s[0], (int)s.size(), nullptr, 0, nullptr, nullptr);
-      std::string result(size_needed, 0);
-      WideCharToMultiByte(CP_UTF8, 0, &s[0], (int)s.size(), &result[0], size_needed, nullptr, nullptr);
-
-      return result;
-    }
   };
 }
