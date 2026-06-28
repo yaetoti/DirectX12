@@ -74,8 +74,10 @@ namespace Flame {
     if (m_handle) {
       DestroyWindow(m_handle);
     }
+  }
 
-    UnregisterClassW(kClassName, GetModuleHandleW(nullptr));
+  void Window::Show() {
+    ShowWindow(m_handle, SW_SHOW);
   }
 
   LRESULT Window::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {

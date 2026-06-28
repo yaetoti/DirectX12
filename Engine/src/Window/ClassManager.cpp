@@ -31,6 +31,12 @@ namespace Flame {
   }
 
   void ClassManager::Cleanup() {
+    auto hModule = GetModuleHandle(nullptr);
+    for (auto it = m_classes.begin(); it != m_classes.end(); ++it) {
+      UnregisterClassW(it->c_str(), hModule);
+    }
+
+    m_classes.clear();
   }
 
   bool ClassManager::Has(const std::wstring& name) const {

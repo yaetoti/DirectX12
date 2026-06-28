@@ -2,7 +2,7 @@
 
 #include <string>
 #include <Windows.h>
-#include "../Utils/Types.hpp"
+#include "Utils/Types.hpp"
 
 namespace Flame {
   struct Window final {
@@ -11,6 +11,7 @@ namespace Flame {
 
     bool Initialize();
     void Cleanup();
+    void Show();
 
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
