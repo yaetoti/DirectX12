@@ -16,31 +16,67 @@ namespace Flame {
 
   struct Logger final {
     template <typename... Args>
+    static void Log(std::wformat_string<Args...> fmt, Args&&... args) {
+      std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
+      std::wstring result = message + L"\n";
+
+      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (hConsole != INVALID_HANDLE_VALUE) {
+        std::string output = StringHelper::WideToUtf8(result);
+        WriteFile(hConsole, output.c_str(), output.size(), nullptr, nullptr);
+      }
+    }
+
+    template <typename... Args>
     static void Log(LogLevel level, std::wformat_string<Args...> fmt, Args&&... args) {
       std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
-      std::wstring result = GetLogPrefixW(level) + message;
-      std::wcout << result << std::endl;
+      std::wstring result = GetLogPrefixW(level) + message + L"\n";
+
+      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (hConsole != INVALID_HANDLE_VALUE) {
+        std::string output = StringHelper::WideToUtf8(result);
+        WriteFile(hConsole, output.c_str(), output.size(), nullptr, nullptr);
+      }
     }
 
     template <typename... Args>
     static void Log(std::source_location location, LogLevel level, std::wformat_string<Args...> fmt, Args&&... args) {
       std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
-      std::wstring result = GetLocationPrefixW(location) + GetLogPrefixW(level) + message;
-      std::wcout << result << std::endl;
+      std::wstring result = GetLocationPrefixW(location) + GetLogPrefixW(level) + message + L"\n";
+
+      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (hConsole != INVALID_HANDLE_VALUE) {
+        std::string output = StringHelper::WideToUtf8(result);
+        WriteFile(hConsole, output.c_str(), output.size(), nullptr, nullptr);
+      }
+    }
+
+    template <typename... Args>
+    static void Log(std::format_string<Args...> fmt, Args&&... args) {
+      std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
+      std::string result = message + '\n';
+
+      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (hConsole != INVALID_HANDLE_VALUE) {
+        WriteFile(hConsole, result.c_str(), result.size(), nullptr, nullptr);
+      }
     }
 
     template <typename... Args>
     static void Log(LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
       std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
-      std::string result = StringHelper::WideToUtf8(GetLogPrefixW(level)) + message;
-      std::cout << result << std::endl;
+      std::string result = StringHelper::WideToUtf8(GetLogPrefixW(level)) + message + '\n';
+
+      HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (hConsole != INVALID_HANDLE_VALUE) {
+        WriteFile(hConsole, result.c_str(), result.size(), nullptr, nullptr);
+      }
     }
 
     template <typename... Args>
     static void Log(std::source_location location, LogLevel level, std::format_string<Args...> fmt, Args&&... args) {
       std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
-      std::string result = StringHelper::WideToUtf8(GetLocationPrefixW(location) + GetLogPrefixW(level)) + message;
-      std::cout << result << std::endl;
+      std::string result = StringHelper::WideToUtf8(GetLocationPrefixW(location) + GetLogPrefixW(level)) + message + '\n';
     }
 
   private:

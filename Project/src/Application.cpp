@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "Utils/Logger.hpp"
+
 Application::Application() {
   m_window = std::make_unique<Flame::Window>(L"Flame 3.0", 800, 600);
 }
@@ -45,7 +47,7 @@ bool Application::Initialize() {
   m_window->GetEventQueue().Subscribe([](auto& e) {
     if (e.GetType() == Flame::WindowEventType::Key) {
       auto* keyEvent = e.As<Flame::KeyWindowEvent>();
-      std::cout << "Key: " << std::hex << keyEvent->vkCode << std::endl;
+      std::wcout << L"Key: " << std::hex << keyEvent->vkCode << std::endl;
     }
     if (e.GetType() == Flame::WindowEventType::Text) {
       auto* keyEvent = e.As<Flame::TextWindowEvent>();
@@ -58,7 +60,10 @@ bool Application::Initialize() {
 }
 
 void Application::Update() {
-
+  auto input = m_window->GetInputSystem();
+  if (input.HasText()) {
+    Flame::Logger::Log(L"{}", input.GetText());
+  }
 }
 
 void Application::Render() {

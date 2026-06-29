@@ -4,7 +4,7 @@
 #include <Windows.h>
 
 #include "InputSystem.hpp"
-#include "events/WindowEvent.hpp"
+#include "Events/WindowEvent.hpp"
 #include "Utils/EventQueue.hpp"
 #include "Utils/Types.hpp"
 
