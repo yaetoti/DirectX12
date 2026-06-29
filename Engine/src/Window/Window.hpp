@@ -2,6 +2,8 @@
 
 #include <string>
 #include <Windows.h>
+
+#include "Utils/EventQueue.hpp"
 #include "Utils/Types.hpp"
 
 namespace Flame {
@@ -13,7 +15,9 @@ namespace Flame {
     void Cleanup();
     void Show();
 
-    static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT HandleKeyEvent(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam);
+
+    static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
   private:
     HWND m_handle;

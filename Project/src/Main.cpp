@@ -1,25 +1,12 @@
 #include <iostream>
 #include <Windows.h>
 
-#include "glm/vec2.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "Window/Window.hpp"
 #include "Utils/Logger.hpp"
 
 int wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   std::locale::global(std::locale("en-US.UTF8"));
-
-  glm::vec2 v(1, 2);
-
-  Flame::Logger::Log(Flame::LogLevel::Info, L"Привет!");
-  Flame::Logger::Log(Flame::LogLevel::Info, "{}", glm::to_string(v));
-
-  std::wstring h = L"Привет, мир!";
-
-  std::cout << "Привет, мир!" << std::endl;
-  std::wcout << h << std::endl;
-  std::wcout << L"Hello World!" << std::endl;
-  std::cout << glm::to_string(v) << std::endl;
 
   // Start
   Flame::ClassManager::Start();

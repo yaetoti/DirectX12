@@ -80,7 +80,35 @@ namespace Flame {
     ShowWindow(m_handle, SW_SHOW);
   }
 
-  LRESULT Window::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+  LRESULT Window::HandleKeyEvent(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam) {
+    return 0;
+  }
+
+  LRESULT Window::WndProc(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_CREATE) {
+      auto data = (CREATESTRUCTW*)lParam;
+      SetWindowLongPtrW(handle, GWLP_USERDATA, (LONG_PTR)data->lpCreateParams);
+      return 0;
+    }
+
+    if (msg == WM_DESTROY) {
+      PostQuitMessage(0);
+      return 0;
+    }
+
+    auto window = (Window*)GetWindowLongPtrW(handle, GWLP_USERDATA);
+    if (!window) {
+      return DefWindowProcW(handle, msg, wParam, lParam);
+    }
+
+    switch (msg) {
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+      return window->HandleKeyEvent(handle, msg, wParam, lParam);
+    }
+
+    return DefWindowProcW(handle, msg, wParam, lParam);
   }
 }
