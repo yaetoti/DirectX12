@@ -82,6 +82,9 @@ namespace Flame {
   }
 
   void Window::PollEvents() {
+    m_inputSystem.Update();
+    // TODO consume events here, flush later
+
     m_eventQueue.Flush();
   }
 
@@ -119,14 +122,23 @@ namespace Flame {
         u64 scanCode = (lParam >> 16) & 0xFF;
         bool isExtended = (lParam & (1 << 24)) != 0;
         bool previousState = lParam & (1 << 30);
+        KeyWindowEvent::Type type;
 
-        // Skip repetition
-        if (previousState && (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN)) {
-          return 0;
+        if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) {
+          // Skip repetition
+          if (previousState) {
+            return 0;
+          }
+
+          type = KeyWindowEvent::Type::Pressed;
         }
+        else {
+          // Skip repetition
+          if (!previousState) {
+            return 0;
+          }
 
-        if (!previousState && (msg == WM_KEYUP || msg == WM_SYSKEYUP)) {
-          return 0;
+          type = KeyWindowEvent::Type::Released;
         }
 
         // Handle left-right
@@ -136,7 +148,7 @@ namespace Flame {
           vkCode = MapVirtualKeyW(scanCode, MAPVK_VSC_TO_VK_EX);
         }
 
-        window->m_eventQueue.Add(std::make_unique<KeyWindowEvent>(vkCode, scanCode));
+        window->m_eventQueue.Add(std::make_unique<KeyWindowEvent>(type, vkCode, scanCode));
         return 0;
       }
       case WM_CHAR: {

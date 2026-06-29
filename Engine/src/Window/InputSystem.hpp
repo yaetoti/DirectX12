@@ -15,7 +15,9 @@ namespace Flame {
   };
 
   struct InputSystem final {
-    void HandleEvent(const Event<WindowEventType>& e);
+    void Update();
+    void PostUpdate();
+    void HandleEvent(const Event<WindowEventType>& event);
 
     bool WasKeyPressed(u32 vkCode) const;
     bool WasKeyReleased(u32 vkCode) const;
@@ -27,6 +29,7 @@ namespace Flame {
 
   private:
     std::array<KeyState, kKeyCount> m_keyStates { KeyState::Up };
-    glm::ivec2 m_mousePos;
+    // TODO add wchar text collection
+    // TODO leave high surrogate for the next tick
   };
 }

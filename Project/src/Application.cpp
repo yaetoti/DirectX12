@@ -43,11 +43,11 @@ bool Application::Initialize() {
   }
 
   m_window->GetEventQueue().Subscribe([](auto& e) {
-    if (e.GetType() == Flame::WindowEventType::KEY) {
+    if (e.GetType() == Flame::WindowEventType::Key) {
       auto* keyEvent = e.As<Flame::KeyWindowEvent>();
       std::cout << "Key: " << std::hex << keyEvent->vkCode << std::endl;
     }
-    if (e.GetType() == Flame::WindowEventType::TEXT) {
+    if (e.GetType() == Flame::WindowEventType::Text) {
       auto* keyEvent = e.As<Flame::TextWindowEvent>();
       std::wcout << L"Text: " << keyEvent->symbol << std::endl;
     }
