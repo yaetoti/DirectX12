@@ -31,6 +31,18 @@ namespace Flame {
       return m_type;
     }
 
+    template <typename T>
+    requires std::derived_from<T, Event>
+    T* As() {
+      return static_cast<T*>(this);
+    }
+
+    template <typename T>
+    requires std::derived_from<T, Event>
+    const T* As() const {
+      return static_cast<const T*>(this);
+    }
+
   protected:
     Event(TType type):
     m_type(type) {

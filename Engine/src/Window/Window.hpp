@@ -3,6 +3,8 @@
 #include <string>
 #include <Windows.h>
 
+#include "InputSystem.hpp"
+#include "events/WindowEvent.hpp"
 #include "Utils/EventQueue.hpp"
 #include "Utils/Types.hpp"
 
@@ -15,7 +17,10 @@ namespace Flame {
     void Cleanup();
     void Show();
 
-    LRESULT HandleKeyEvent(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam);
+    void PollEvents();
+
+    const EventQueue<Event<WindowEventType>>& GetEventQueue() const;
+    const InputSystem& GetInputSystem() const;
 
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -25,6 +30,9 @@ namespace Flame {
     u32 m_height;
     std::wstring m_title;
     bool m_isFullscreen;
+
+    EventQueue<Event<WindowEventType>> m_eventQueue;
+    InputSystem m_inputSystem;
 
     inline static const wchar_t* kClassName = L"Window";
   };

@@ -18,6 +18,17 @@ int wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
     return 0;
   }
 
+  window->GetEventQueue().Subscribe([](auto& e) {
+    if (e.GetType() == Flame::WindowEventType::KEY) {
+      auto* keyEvent = e.As<Flame::KeyWindowEvent>();
+      std::cout << "Key: " << std::hex << keyEvent->vkCode << std::endl;
+    }
+    if (e.GetType() == Flame::WindowEventType::TEXT) {
+      auto* keyEvent = e.As<Flame::TextWindowEvent>();
+      std::wcout << L"Text: " << keyEvent->symbol << std::endl;
+    }
+  });
+
   window->Show();
 
   bool isRunning = true;
@@ -33,6 +44,8 @@ int wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
       TranslateMessage(&msg);
       DispatchMessageW(&msg);
     }
+
+    window->PollEvents();
 
     // Update
     // Render

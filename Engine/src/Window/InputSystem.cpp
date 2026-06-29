@@ -2,8 +2,10 @@
 
 #include <cassert>
 
+#include "events/WindowEvent.hpp"
+
 namespace Flame {
-  void InputSystem::Update() {
+  void InputSystem::HandleEvent(const Event<WindowEventType>& e) {
 
   }
 

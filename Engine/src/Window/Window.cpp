@@ -67,6 +67,7 @@ namespace Flame {
       return false;
     }
 
+    m_eventQueue.Subscribe([&](auto& e) { m_inputSystem.HandleEvent(e); });
     return true;
   }
 
@@ -80,8 +81,16 @@ namespace Flame {
     ShowWindow(m_handle, SW_SHOW);
   }
 
-  LRESULT Window::HandleKeyEvent(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam) {
-    return 0;
+  void Window::PollEvents() {
+    m_eventQueue.Flush();
+  }
+
+  const EventQueue<Event<WindowEventType>>& Window::GetEventQueue() const {
+    return m_eventQueue;
+  }
+
+  const InputSystem& Window::GetInputSystem() const {
+    return m_inputSystem;
   }
 
   LRESULT Window::WndProc(HWND handle, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -102,13 +111,46 @@ namespace Flame {
     }
 
     switch (msg) {
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-      return window->HandleKeyEvent(handle, msg, wParam, lParam);
-    }
+      case WM_KEYDOWN:
+      case WM_KEYUP:
+      case WM_SYSKEYDOWN:
+      case WM_SYSKEYUP: {
+        u64 vkCode = wParam;
+        u64 scanCode = (lParam >> 16) & 0xFF;
+        bool isExtended = (lParam & (1 << 24)) != 0;
+        bool previousState = lParam & (1 << 30);
 
-    return DefWindowProcW(handle, msg, wParam, lParam);
+        // Skip repetition
+        if (previousState && (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN)) {
+          return 0;
+        }
+
+        if (!previousState && (msg == WM_KEYUP || msg == WM_SYSKEYUP)) {
+          return 0;
+        }
+
+        // Handle left-right
+        if (vkCode == VK_CONTROL) vkCode = isExtended ? VK_LCONTROL : VK_RCONTROL;
+        if (vkCode == VK_MENU) vkCode = isExtended ? VK_LMENU : VK_RMENU;
+        if (vkCode == VK_SHIFT) {
+          vkCode = MapVirtualKeyW(scanCode, MAPVK_VSC_TO_VK_EX);
+        }
+
+        window->m_eventQueue.Add(std::make_unique<KeyWindowEvent>(vkCode, scanCode));
+        return 0;
+      }
+      case WM_CHAR: {
+        wchar_t symbol = (wchar_t)wParam;
+        // Skip control characters
+        if (iswcntrl(symbol) && !iswspace(symbol)) {
+          return 0;
+        }
+
+        window->m_eventQueue.Add(std::make_unique<TextWindowEvent>(symbol));
+      }
+      default: {
+        return DefWindowProcW(handle, msg, wParam, lParam);
+      }
+    }
   }
 }

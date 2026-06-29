@@ -11,11 +11,11 @@ namespace Flame {
   struct EventQueue final {
     using Handler = std::function<void(const TEvent&)>;
 
-    auto Subscribe(Handler handler) {
+    auto Subscribe(Handler handler) const {
       return m_handlers.emplace_back(handler);
     }
 
-    void Unsubscribe(Handler handler) {
+    void Unsubscribe(Handler handler) const {
       m_handlers.erase(handler);
     }
 
@@ -48,6 +48,6 @@ namespace Flame {
 
   private:
     std::queue<std::unique_ptr<TEvent>> m_queue;
-    std::list<Handler> m_handlers;
+    mutable std::list<Handler> m_handlers;
   };
 }
