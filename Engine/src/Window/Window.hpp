@@ -9,6 +9,13 @@
 #include "Utils/Types.hpp"
 
 namespace Flame {
+  enum class WindowState {
+    Normal,
+    Minimized,
+    Maximized,
+    Fullscreen,
+  };
+
   struct Window final {
     Window(std::wstring  title, u32 width, u32 height);
     ~Window();
@@ -29,7 +36,7 @@ namespace Flame {
     u32 m_width;
     u32 m_height;
     std::wstring m_title;
-    bool m_isFullscreen;
+    WindowState m_state;
 
     EventQueue<Event<WindowEventType>> m_eventQueue;
     InputSystem m_inputSystem;

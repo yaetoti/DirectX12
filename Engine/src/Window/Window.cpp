@@ -1,5 +1,7 @@
 #include "Window.hpp"
 
+#include <iostream>
+#include <ostream>
 #include <utility>
 
 #include "ClassManager.hpp"
@@ -10,7 +12,7 @@ namespace Flame {
   m_width(width),
   m_height(height),
   m_title(std::move(title)),
-  m_isFullscreen(false) {
+  m_state(WindowState::Normal) {
   }
 
   Window::~Window() {
@@ -39,9 +41,10 @@ namespace Flame {
       }
     }
 
+    // TODO window state handling: minimized, maximized, fullscreen, normal
     // Define style
     DWORD styleEx = 0;
-    DWORD style = m_isFullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+    DWORD style = WS_OVERLAPPEDWINDOW;
 
     // Adjust window size
     RECT rect = { 0, 0, (LONG)m_width, (LONG)m_height };
@@ -159,10 +162,25 @@ namespace Flame {
         }
 
         window->m_eventQueue.Add(std::make_unique<TextWindowEvent>(symbol));
+        return 0;
       }
-      default: {
-        return DefWindowProcW(handle, msg, wParam, lParam);
+      case WM_SIZE: {
+        // TODO handle minimize maximize fullscreen
+        u32 width = LOWORD(lParam);
+        u32 height = HIWORD(lParam);
+        window->m_width = width;
+        window->m_height = height;
+        window->m_eventQueue.Add(std::make_unique<ResizeWindowEvent>(width, height));
+        return 0;
       }
     }
+
+    return DefWindowProcW(handle, msg, wParam, lParam);
+
+    // TODO resize
+    // TODO hide show
+    // TODO focus gain lost
+    // TODO mouse position
+    // TODO mouse scroll
   }
 }

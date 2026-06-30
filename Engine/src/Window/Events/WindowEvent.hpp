@@ -7,6 +7,7 @@ namespace Flame {
   enum class WindowEventType {
     Key,
     Text,
+    Resize,
   };
 
   struct KeyWindowEvent final : Event<WindowEventType> {
@@ -33,5 +34,15 @@ namespace Flame {
     symbol(symbol) {}
 
     wchar_t symbol;
+  };
+
+  struct ResizeWindowEvent final : Event<WindowEventType> {
+    explicit ResizeWindowEvent(u32 width, u32 height):
+    Event(WindowEventType::Resize),
+    width(width),
+    height(height) {}
+
+    u32 width;
+    u32 height;
   };
 }
