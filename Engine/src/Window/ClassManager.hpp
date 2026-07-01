@@ -13,7 +13,7 @@ namespace Flame {
     static void Shutdown();
     static ClassManager* Get();
 
-    void Initialize();
+    bool Initialize();
     void Cleanup();
 
     bool Has(const std::wstring& name) const;

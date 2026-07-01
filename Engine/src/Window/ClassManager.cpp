@@ -27,7 +27,8 @@ namespace Flame {
     return s_instance;
   }
 
-  void ClassManager::Initialize() {
+  bool ClassManager::Initialize() {
+    return true;
   }
 
   void ClassManager::Cleanup() {
