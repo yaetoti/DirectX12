@@ -1,6 +1,7 @@
 #pragma once
 #include "Window/ClassManager.hpp"
 #include "Types.hpp"
+#include <comdef.h>
 
 namespace Flame {
   struct LogHelper final {
@@ -27,6 +28,11 @@ namespace Flame {
       std::wstring message(messageBuffer, size);
       LocalFree(messageBuffer);
       return message;
+    }
+
+    static std::wstring GetHresultString(HRESULT hr) {
+      _com_error err(hr);
+      return err.ErrorMessage();
     }
   };
 }

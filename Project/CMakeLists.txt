@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.22)
 project(Project)
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.hpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.hpp")
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   Engine
+  d3d12.lib
+  dxgi.lib
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
