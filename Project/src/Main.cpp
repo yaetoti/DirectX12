@@ -3,6 +3,7 @@
 
 #include "Application.hpp"
 #include "Engine.hpp"
+#include "Utils/Logger.hpp"
 
 int wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   std::locale::global(std::locale("en-US.UTF8"));
