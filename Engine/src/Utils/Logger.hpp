@@ -15,11 +15,11 @@ namespace Flame {
   };
 
   struct Logger final {
+    // wchar_t
     template <typename... Args>
     static void Log(std::wformat_string<Args...> fmt, Args&&... args) {
       std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
-      std::wstring result = message;
-      std::string output = StringHelper::WideToUtf8(result);
+      std::string output = StringHelper::WideToUtf8(message);
       std::cout << output;
     }
 
@@ -39,6 +39,7 @@ namespace Flame {
       std::cout << output << std::endl;
     }
 
+    // char
     template <typename... Args>
     static void Log(std::format_string<Args...> fmt, Args&&... args) {
       std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
