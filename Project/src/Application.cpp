@@ -6,10 +6,11 @@
 
 Application::Application() {
   m_window = std::make_unique<Flame::Window>(L"Flame 3.0", 800, 600);
+  m_context = std::make_unique<Flame::RenderContext>();
 }
 
 Application::~Application() {
-
+  Cleanup();
 }
 
 void Application::RunMainLoop() {
@@ -44,19 +45,17 @@ bool Application::Initialize() {
     return false;
   }
 
-  m_window->GetEventQueue().Subscribe([](auto& e) {
-    if (e.GetType() == Flame::WindowEventType::Key) {
-      auto* keyEvent = e.As<Flame::KeyWindowEvent>();
-      std::wcout << L"Key: " << std::hex << keyEvent->vkCode << std::endl;
-    }
-    if (e.GetType() == Flame::WindowEventType::Text) {
-      auto* keyEvent = e.As<Flame::TextWindowEvent>();
-      std::wcout << L"Text: " << keyEvent->symbol << std::endl;
-    }
-  });
+  if (!m_context->Initialize(m_window->GetHandle(), m_window->GetWidth(), m_window->GetHeight())) {
+    return false;
+  }
 
   m_window->Show();
   return true;
+}
+
+void Application::Cleanup() {
+  m_context.reset();
+  m_window.reset();
 }
 
 void Application::Update() {
@@ -67,5 +66,7 @@ void Application::Update() {
 }
 
 void Application::Render() {
+  m_context->BeginFrame();
 
+  m_context->EndFrame();
 }
