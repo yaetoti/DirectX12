@@ -24,7 +24,9 @@ namespace Flame {
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     queueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    if (FAILED(hr = device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)))) {
+
+    hr = device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue));
+    if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to create command queue. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }
@@ -40,7 +42,8 @@ namespace Flame {
     swapChainDesc.SampleDesc.Count = 1;
 
     ComPtr<IDXGISwapChain1> swapChain;
-    if (FAILED(hr = factory->CreateSwapChainForHwnd(m_commandQueue.Get(), handle, &swapChainDesc, nullptr, nullptr, &swapChain))) {
+    hr = factory->CreateSwapChainForHwnd(m_commandQueue.Get(), handle, &swapChainDesc, nullptr, nullptr, &swapChain);
+    if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to create swap chain. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }
@@ -53,7 +56,9 @@ namespace Flame {
     heapDesc.NumDescriptors = kBufferCount;
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    if (FAILED(hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_rtvHeap)))) {
+
+    hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_rtvHeap));
+    if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to create descriptor heap. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }
@@ -62,7 +67,8 @@ namespace Flame {
     u64 rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
     for (u32 i = 0; i < kBufferCount; ++i) {
-      if (FAILED(hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers[i])))) {
+      hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers[i]));
+      if (FAILED(hr)) {
         Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to get buffer. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
         return false;
       }
@@ -72,7 +78,8 @@ namespace Flame {
     }
 
     // Fence
-    if (FAILED(hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)))) {
+    hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+    if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to create fence. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }

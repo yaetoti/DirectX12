@@ -76,7 +76,8 @@ namespace Flame {
   bool RenderCore::CreateDebugLayer() {
     HRESULT hr = S_OK;
 
-    if (FAILED(hr = D3D12GetDebugInterface(IID_PPV_ARGS(&m_debug)))) {
+    hr = D3D12GetDebugInterface(IID_PPV_ARGS(&m_debug));
+    if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to get debug interface. Code: 0x{:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }
@@ -94,7 +95,8 @@ namespace Flame {
     flags |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-    if (FAILED(hr = CreateDXGIFactory2(flags, IID_PPV_ARGS(&m_factory)))) {
+    hr = CreateDXGIFactory2(flags, IID_PPV_ARGS(&m_factory));
+    if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to create DXGI factory. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }
@@ -113,7 +115,8 @@ namespace Flame {
       }
 
       DXGI_ADAPTER_DESC1 desc;
-      if (FAILED(hr = adapter->GetDesc1(&desc))) {
+      hr = adapter->GetDesc1(&desc);
+      if (FAILED(hr)) {
         Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to get adapter description. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
         continue;
       }
