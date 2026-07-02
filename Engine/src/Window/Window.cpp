@@ -91,6 +91,26 @@ namespace Flame {
     m_eventQueue.Flush();
   }
 
+  HWND Window::GetHandle() const {
+    return m_handle;
+  }
+
+  u32 Window::GetWidth() const {
+    return m_width;
+  }
+
+  u32 Window::GetHeight() const {
+    return m_height;
+  }
+
+  const std::wstring& Window::GetTitle() const {
+    return m_title;
+  }
+
+  WindowState Window::GetState() const {
+    return m_state;
+  }
+
   const EventQueue<Event<WindowEventType>>& Window::GetEventQueue() const {
     return m_eventQueue;
   }

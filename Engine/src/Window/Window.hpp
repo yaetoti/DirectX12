@@ -26,6 +26,11 @@ namespace Flame {
 
     void PollEvents();
 
+    HWND GetHandle() const;
+    u32 GetWidth() const;
+    u32 GetHeight() const;
+    const std::wstring& GetTitle() const;
+    WindowState GetState() const;
     const EventQueue<Event<WindowEventType>>& GetEventQueue() const;
     const InputSystem& GetInputSystem() const;
 

@@ -14,6 +14,13 @@ namespace Flame {
     void Cleanup();
 
   private:
+    bool CreateCommandQueue();
+    bool CreateSwapChain(HWND handle, u32 width, u32 height);
+    bool CreateDescriptorHeaps();
+    bool CreateBackBuffers();
+    bool CreateFence();
+
+  private:
     static constexpr u32 kBufferCount = 2;
 
     ComPtr<IDXGISwapChain4> m_swapChain;
