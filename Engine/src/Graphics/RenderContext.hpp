@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <dxgi1_5.h>
 
+#include "glm/vec4.hpp"
 #include "Utils/Types.hpp"
 #include "Utils/WinTypes.hpp"
 
@@ -16,8 +17,11 @@ namespace Flame {
     void BeginFrame();
     void EndFrame();
 
+    void BindBackBufferRT();
+    void Clear(glm::vec4 color);
+
   private:
-    void WaitForFence();
+    void WaitForAll();
 
     bool CreateCommandQueue();
     bool CreateSwapChain(HWND handle, u32 width, u32 height);
@@ -32,8 +36,10 @@ namespace Flame {
 
     ComPtr<IDXGISwapChain4> m_swapChain;
     ComPtr<ID3D12CommandQueue> m_commandQueue;
-    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+
     ComPtr<ID3D12Resource> m_backBuffers[kBufferCount];
+    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHeapHandles[kBufferCount] = { };
 
     ComPtr<ID3D12CommandAllocator> m_allocators[kBufferCount];
     ComPtr<ID3D12GraphicsCommandList6> m_commandList;

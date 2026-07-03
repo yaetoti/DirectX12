@@ -68,5 +68,8 @@ void Application::Update() {
 void Application::Render() {
   m_context->BeginFrame();
 
+  m_context->BindBackBufferRT();
+  m_context->Clear(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
   m_context->EndFrame();
 }

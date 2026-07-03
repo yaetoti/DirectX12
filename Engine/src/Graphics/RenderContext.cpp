@@ -48,7 +48,7 @@ namespace Flame {
 
   void RenderContext::Cleanup() {
     if (m_commandQueue) {
-      WaitForFence();
+      WaitForAll();
     }
 
     if (m_fenceEvent) {
@@ -74,36 +74,26 @@ namespace Flame {
 
   void RenderContext::BeginFrame() {
     HRESULT hr = S_OK;
+
+    // Wait for frame
     u64 completedFenceValue = m_fence->GetCompletedValue();
     if (completedFenceValue < m_fenceValues[m_currentBufferIndex]) {
       m_fence->SetEventOnCompletion(m_fenceValues[m_currentBufferIndex], m_fenceEvent);
       WaitForSingleObject(m_fenceEvent, INFINITE);
     }
 
+    // Reset allocator memory
     m_allocators[m_currentBufferIndex]->Reset();
     hr = m_commandList->Reset(m_allocators[m_currentBufferIndex].Get(), nullptr);
     if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Warning, L"Failed to reset command list. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
     }
-
-    D3D12_RESOURCE_BARRIER barrier = {};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Transition.pResource = m_backBuffers[m_currentBufferIndex].Get();
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    m_commandList->ResourceBarrier(1, &barrier);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-    rtvHandle.ptr += (m_currentBufferIndex * m_rtvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-    const float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
   }
 
   void RenderContext::EndFrame() {
     HRESULT hr = S_OK;
+
+    // Switch to present mode
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Transition.pResource = m_backBuffers[m_currentBufferIndex].Get();
@@ -113,14 +103,17 @@ namespace Flame {
     m_commandList->ResourceBarrier(1, &barrier);
     m_commandList->Close();
 
+    // Execute commands
     ID3D12CommandList* commandLists[] = { m_commandList.Get() };
     m_commandQueue->ExecuteCommandLists(1, commandLists);
 
+    // Present
     hr = m_swapChain->Present(1, 0);
     if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Warning, L"Failed to present swap chain. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
     }
 
+    // Switch to the next frame. Update fence
     m_fenceCounter += 1;
     m_fenceValues[m_currentBufferIndex] = m_fenceCounter;
     hr = m_commandQueue->Signal(m_fence.Get(), m_fenceCounter);
@@ -131,7 +124,28 @@ namespace Flame {
     m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
   }
 
-  void RenderContext::WaitForFence() {
+  void RenderContext::BindBackBufferRT() {
+    // TODO How to ensure that frame started? Do we need even?
+
+    // Switch mode
+    D3D12_RESOURCE_BARRIER barrier = {};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = m_backBuffers[m_currentBufferIndex].Get();
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    m_commandList->ResourceBarrier(1, &barrier);
+
+    // Bind RT
+    m_commandList->OMSetRenderTargets(1, &m_rtvHeapHandles[m_currentBufferIndex], FALSE, nullptr);
+  }
+
+  void RenderContext::Clear(glm::vec4 color) {
+    const float clearColor[] = { color.r, color.g, color.b, color.a };
+    m_commandList->ClearRenderTargetView(m_rtvHeapHandles[m_currentBufferIndex], clearColor, 0, nullptr);
+  }
+
+  void RenderContext::WaitForAll() {
     m_fenceCounter += 1;
     m_commandQueue->Signal(m_fence.Get(), m_fenceCounter);
     m_fence->SetEventOnCompletion(m_fenceCounter, m_fenceEvent);
@@ -206,6 +220,7 @@ namespace Flame {
 
     m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
     for (u32 i = 0; i < kBufferCount; ++i) {
       hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers[i]));
       if (FAILED(hr)) {
@@ -213,7 +228,11 @@ namespace Flame {
         return false;
       }
 
+      // Create target view
       device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, rtvHandle);
+      m_rtvHeapHandles[i] = rtvHandle;
+
+      // Next descriptor
       rtvHandle.ptr += m_rtvDescriptorSize;
     }
 
