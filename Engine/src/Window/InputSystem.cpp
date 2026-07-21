@@ -30,9 +30,6 @@ namespace Flame {
       auto* e = event.As<KeyWindowEvent>();
       KeyState state = e->type == KeyWindowEvent::Type::Pressed ? KeyState::Pressed : KeyState::Released;
       m_keyStates[e->vkCode] = state;
-      if (e->vkCode == VK_LSHIFT || e->vkCode == VK_RSHIFT) m_keyStates[VK_SHIFT] = state;
-      if (e->vkCode == VK_LMENU || e->vkCode == VK_RMENU) m_keyStates[VK_MENU] = state;
-      if (e->vkCode == VK_LCONTROL || e->vkCode == VK_RCONTROL) m_keyStates[VK_CONTROL] = state;
       return;
     }
 

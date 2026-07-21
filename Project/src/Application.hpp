@@ -16,6 +16,8 @@ private:
   void Update();
   void Render();
 
+  void HandleWindowEvent(const Flame::Event<Flame::WindowEventType>& event);
+
 private:
   std::unique_ptr<Flame::Window> m_window;
   std::unique_ptr<Flame::RenderContext> m_context;

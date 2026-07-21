@@ -167,9 +167,7 @@ namespace Flame {
         // Handle left-right
         if (vkCode == VK_CONTROL) vkCode = isExtended ? VK_LCONTROL : VK_RCONTROL;
         if (vkCode == VK_MENU) vkCode = isExtended ? VK_LMENU : VK_RMENU;
-        if (vkCode == VK_SHIFT) {
-          vkCode = MapVirtualKeyW(scanCode, MAPVK_VSC_TO_VK_EX);
-        }
+        if (vkCode == VK_SHIFT) vkCode = MapVirtualKeyW(scanCode, MAPVK_VSC_TO_VK_EX);
 
         window->m_eventQueue.Add(std::make_unique<KeyWindowEvent>(type, vkCode, scanCode));
         return 0;
@@ -197,7 +195,6 @@ namespace Flame {
 
     return DefWindowProcW(handle, msg, wParam, lParam);
 
-    // TODO resize
     // TODO hide show
     // TODO focus gain lost
     // TODO mouse position

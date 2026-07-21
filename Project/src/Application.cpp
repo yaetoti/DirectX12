@@ -49,6 +49,10 @@ bool Application::Initialize() {
     return false;
   }
 
+  m_window->GetEventQueue().Subscribe([this](const Flame::Event<Flame::WindowEventType>& event) {
+    HandleWindowEvent(event);
+  });
+
   m_window->Show();
   return true;
 }
@@ -69,7 +73,14 @@ void Application::Render() {
   m_context->BeginFrame();
 
   m_context->BindBackBufferRT();
-  m_context->Clear(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+  m_context->ClearRT(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
   m_context->EndFrame();
+}
+
+void Application::HandleWindowEvent(const Flame::Event<Flame::WindowEventType>& event) {
+  if (event.GetType() == Flame::WindowEventType::Resize) {
+    auto& e = dynamic_cast<const Flame::ResizeWindowEvent&>(event);
+    m_context->OnResize(e.width, e.height);
+  }
 }

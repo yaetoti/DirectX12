@@ -21,6 +21,7 @@ namespace Flame {
       std::wstring message = std::vformat(fmt.get(), std::make_wformat_args(args...));
       std::string output = StringHelper::WideToUtf8(message);
       std::cout << output;
+      std::cout.flush();
     }
 
     template <typename... Args>
@@ -43,7 +44,7 @@ namespace Flame {
     template <typename... Args>
     static void Log(std::format_string<Args...> fmt, Args&&... args) {
       std::string message = std::vformat(fmt.get(), std::make_format_args(args...));
-      std::string result = message + '\n';
+      std::string result = message;
       std::cout << result << std::endl;
     }
 

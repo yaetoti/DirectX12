@@ -25,7 +25,7 @@ namespace Flame {
   template <typename TType>
   requires std::is_enum_v<TType>
   struct Event : BaseEvent {
-    virtual ~Event() = default;
+    ~Event() override = default;
 
     TType GetType() const {
       return m_type;
