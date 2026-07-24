@@ -74,6 +74,7 @@ void Application::Render() {
 
   m_context->BindBackBufferRT();
   m_context->ClearRT(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+  m_context->ClearDepthStencil();
 
   m_context->EndFrame();
 }
@@ -81,6 +82,6 @@ void Application::Render() {
 void Application::HandleWindowEvent(const Flame::Event<Flame::WindowEventType>& event) {
   if (event.GetType() == Flame::WindowEventType::Resize) {
     auto& e = dynamic_cast<const Flame::ResizeWindowEvent&>(event);
-    m_context->OnResize(e.width, e.height);
+    m_context->Resize(e.width, e.height);
   }
 }

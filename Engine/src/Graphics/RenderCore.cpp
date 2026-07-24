@@ -47,10 +47,15 @@ namespace Flame {
       return false;
     }
 
+    if (!m_commandQueue.Initialize()) {
+      return false;
+    }
+
     return true;
   }
 
   void RenderCore::Cleanup() {
+    m_commandQueue.Reset();
     m_device.Reset();
     m_adapter.Reset();
     m_factory.Reset();
@@ -71,6 +76,10 @@ namespace Flame {
 
   ID3D12Device9* RenderCore::GetDevice() {
     return m_device.Get();
+  }
+
+  CommandQueue& RenderCore::GetCommandQueue() {
+    return m_commandQueue;
   }
 
   bool RenderCore::CreateDebugLayer() {

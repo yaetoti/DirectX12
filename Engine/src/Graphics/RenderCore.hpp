@@ -3,6 +3,8 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
+#include "CommandQueue.hpp"
+#include "Utils/Types.hpp"
 #include "Utils/WinTypes.hpp"
 
 namespace Flame {
@@ -18,6 +20,7 @@ namespace Flame {
     IDXGIFactory7* GetFactory();
     IDXGIAdapter4* GetAdapter();
     ID3D12Device9* GetDevice();
+    CommandQueue& GetCommandQueue();
 
   private:
     RenderCore();
@@ -35,6 +38,7 @@ namespace Flame {
     ComPtr<IDXGIFactory7> m_factory;
     ComPtr<IDXGIAdapter4> m_adapter;
     ComPtr<ID3D12Device9> m_device;
+    CommandQueue m_commandQueue;
 
     inline static RenderCore* s_instance = nullptr;
   };
