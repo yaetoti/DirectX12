@@ -34,7 +34,7 @@ namespace Flame {
     m_commandQueue.Reset();
   }
 
-  void CommandQueue::ExecuteCommandList(ID3D12CommandList* commandList) {
+  void CommandQueue::Execute(ID3D12CommandList* commandList) {
     m_commandQueue->ExecuteCommandLists(1, &commandList);
   }
 

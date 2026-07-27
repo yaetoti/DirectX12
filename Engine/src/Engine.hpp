@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/RenderCore.hpp"
+#include "Graphics/Managers/DescriptorManager.hpp"
 #include "Window/ClassManager.hpp"
 
 namespace Flame {
@@ -15,10 +16,16 @@ namespace Flame {
         return false;
       }
 
+      DescriptorManager::Start();
+      if (!DescriptorManager::Get()->Initialize()) {
+        return false;
+      }
+
       return true;
     }
 
     static void Shutdown() {
+      DescriptorManager::Shutdown();
       RenderCore::Shutdown();
       ClassManager::Shutdown();
     }

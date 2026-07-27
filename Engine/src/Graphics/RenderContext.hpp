@@ -2,6 +2,8 @@
 #include <d3d12.h>
 #include <dxgi1_5.h>
 
+#include "DescriptorHandle.hpp"
+#include "Texture.hpp"
 #include "glm/vec4.hpp"
 #include "Utils/Types.hpp"
 #include "Utils/WinTypes.hpp"
@@ -48,11 +50,8 @@ namespace Flame {
     ComPtr<ID3D12GraphicsCommandList6> m_commandList;
 
     // Back Buffers
-    ComPtr<ID3D12Resource> m_backBuffers[kBufferCount];
-    D3D12_RESOURCE_STATES m_backBufferStates[kBufferCount] = { };
-
-    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHeapHandles[kBufferCount] = { };
+    Texture m_backBuffers[kBufferCount];
+    DescriptorHandle m_rtvHandle;
 
     u64 m_fenceValues[kBufferCount] = { };
     u32 m_currentBufferIndex = 0;
@@ -67,6 +66,8 @@ namespace Flame {
     // Size
     u32 m_width = 0;
     u32 m_height = 0;
+    u32 m_newWidth = 0;
+    u32 m_newHeight = 0;
     bool m_wasResized = false;
   };
 }

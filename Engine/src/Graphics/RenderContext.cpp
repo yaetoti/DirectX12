@@ -3,6 +3,7 @@
 #include <source_location>
 
 #include "RenderCore.hpp"
+#include "Managers/DescriptorManager.hpp"
 #include "Shaders/Shader.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/LogHelper.hpp"
@@ -56,22 +57,22 @@ namespace Flame {
       allocator.Reset();
     }
 
-    for (auto& buffer : m_backBuffers) {
-      buffer.Reset();
+    for (auto& texture : m_backBuffers) {
+      texture.Reset();
     }
 
-    m_rtvHeap.Reset();
+    //m_rtvHeap.Reset();
     m_swapChain.Reset();
   }
 
   void RenderContext::Resize(u32 width, u32 height) {
-    if (m_width == width && m_height == height) {
+    if (m_newWidth == width && m_newHeight == height) {
       return;
     }
 
     m_wasResized = true;
-    m_width = width;
-    m_height = height;
+    m_newWidth = width;
+    m_newHeight = height;
   }
 
   void RenderContext::BeginFrame() {
@@ -80,6 +81,7 @@ namespace Flame {
     // Wait for previous frame to finish
     RenderCore::Get()->GetCommandQueue().WaitForFence(m_fenceValues[m_currentBufferIndex]);
 
+    // Handle resize
     if (!HandleResize()) {
       Logger::Log(std::source_location::current(), LogLevel::Warning, L"Failed to handle resize");
       return;
@@ -96,25 +98,14 @@ namespace Flame {
   void RenderContext::EndFrame() {
     HRESULT hr = S_OK;
 
-    // TODO extract
     // Switch to present mode
-    if (m_backBufferStates[m_currentBufferIndex] != D3D12_RESOURCE_STATE_PRESENT) {
-      D3D12_RESOURCE_BARRIER barrier = {};
-      barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-      barrier.Transition.pResource = m_backBuffers[m_currentBufferIndex].Get();
-      barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-      barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-      barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-      m_commandList->ResourceBarrier(1, &barrier);
-
-      m_backBufferStates[m_currentBufferIndex] = D3D12_RESOURCE_STATE_PRESENT;
-    }
+    m_backBuffers[m_currentBufferIndex].Transition(m_commandList.Get(), D3D12_RESOURCE_STATE_PRESENT);
 
     // Close list
     m_commandList->Close();
 
     // Execute commands
-    RenderCore::Get()->GetCommandQueue().ExecuteCommandList(m_commandList.Get());
+    RenderCore::Get()->GetCommandQueue().Execute(m_commandList.Get());
 
     // Present
     hr = m_swapChain->Present(1, 0);
@@ -128,28 +119,17 @@ namespace Flame {
   }
 
   void RenderContext::BindBackBufferRT() {
-    if (m_backBufferStates[m_currentBufferIndex] != D3D12_RESOURCE_STATE_RENDER_TARGET) {
-      // Switch mode
-      D3D12_RESOURCE_BARRIER barrier = {};
-      barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-      barrier.Transition.pResource = m_backBuffers[m_currentBufferIndex].Get();
-      barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-      barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-      barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-      m_commandList->ResourceBarrier(1, &barrier);
-
-      // Update state
-      m_backBufferStates[m_currentBufferIndex] = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    }
+    m_backBuffers[m_currentBufferIndex].Transition(m_commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Bind RT
     auto depthHandle = m_depthHeap->GetCPUDescriptorHandleForHeapStart();
-    m_commandList->OMSetRenderTargets(1, &m_rtvHeapHandles[m_currentBufferIndex], FALSE, &depthHandle);
+    auto handle = m_rtvHandle.Cpu(m_currentBufferIndex);
+    m_commandList->OMSetRenderTargets(1, &handle, FALSE, &depthHandle);
   }
 
   void RenderContext::ClearRT(glm::vec4 color) {
     const float clearColor[] = { color.r, color.g, color.b, color.a };
-    m_commandList->ClearRenderTargetView(m_rtvHeapHandles[m_currentBufferIndex], clearColor, 0, nullptr);
+    m_commandList->ClearRenderTargetView(m_rtvHandle.Cpu(m_currentBufferIndex), clearColor, 0, nullptr);
   }
 
   void RenderContext::ClearDepthStencil() {
@@ -191,15 +171,7 @@ namespace Flame {
     auto* device = RenderCore::Get()->GetDevice();
 
     // Back buffers
-    D3D12_DESCRIPTOR_HEAP_DESC rtDesc = {};
-    rtDesc.NumDescriptors = kBufferCount;
-    rtDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-
-    hr = device->CreateDescriptorHeap(&rtDesc, IID_PPV_ARGS(&m_rtvHeap));
-    if (FAILED(hr)) {
-      Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to create back buffer descriptor heap. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
-      return false;
-    }
+    m_rtvHandle = DescriptorManager::Get()->AllocateRTV(kBufferCount);
 
     // Depth buffer
     D3D12_DESCRIPTOR_HEAP_DESC depthDesc = {};
@@ -217,28 +189,23 @@ namespace Flame {
 
   bool RenderContext::CreateBackBuffers() {
     HRESULT hr = S_OK;
-    auto* device = RenderCore::Get()->GetDevice();
 
-    auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-
+    // Get buffers
     for (u32 i = 0; i < kBufferCount; ++i) {
-      // Get buffer
-      hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers[i]));
+      ComPtr<ID3D12Resource> buffer;
+      hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(buffer.GetAddressOf()));
       if (FAILED(hr)) {
         Logger::Log(std::source_location::current(), LogLevel::Error, L"Failed to get buffer. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
         return false;
       }
 
-      // Set state
-      m_backBufferStates[i] = D3D12_RESOURCE_STATE_PRESENT;
+      // Create texture
+      m_backBuffers[i].Reset(std::move(buffer), D3D12_RESOURCE_STATE_PRESENT);
+    }
 
-      // Create view
-      device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, rtvHandle);
-      m_rtvHeapHandles[i] = rtvHandle;
-
-      // Next descriptor
-      rtvHandle.ptr += rtvDescriptorSize;
+    // Create RTV
+    for (u32 i = 0; i < kBufferCount; ++i) {
+      m_rtvHandle.CreateRTV(i, m_backBuffers[i].GetResource());
     }
 
     return true;
@@ -479,31 +446,40 @@ namespace Flame {
       return false;
     }
 
-    hr = m_swapChain->ResizeBuffers(kBufferCount, m_width, m_height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
+    // Resize swap chain
+    hr = m_swapChain->ResizeBuffers(kBufferCount, m_newWidth, m_newHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
     if (FAILED(hr)) {
       Logger::Log(std::source_location::current(), LogLevel::Warning, L"Failed to resize back buffers. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
       return false;
     }
 
+    // Get buffers
     for (u32 i = 0; i < kBufferCount; ++i) {
-      hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers[i]));
+      ComPtr<ID3D12Resource> buffer;
+      hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(buffer.GetAddressOf()));
       if (FAILED(hr)) {
         Logger::Log(std::source_location::current(), LogLevel::Warning, L"Failed to get the back buffer. Code: {:#X} ({})", (u64)hr, LogHelper::GetHresultString(hr));
         return false;
       }
 
-      device->CreateRenderTargetView(m_backBuffers[i].Get(), nullptr, m_rtvHeapHandles[i]);
-      m_backBufferStates[i] = D3D12_RESOURCE_STATE_PRESENT;
+      m_backBuffers[i].Reset(std::move(buffer), D3D12_RESOURCE_STATE_PRESENT);
+    }
+
+    // Create RTV
+    for (u32 i = 0; i < kBufferCount; ++i) {
+      m_rtvHandle.CreateRTV(i, m_backBuffers[i].GetResource());
     }
 
     m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
     // Depth buffer
-    if (!CreateDepthStencilBuffer(m_width, m_height)) {
+    if (!CreateDepthStencilBuffer(m_newWidth, m_newHeight)) {
       return false;
     }
 
     m_wasResized = false;
+    m_width = m_newWidth;
+    m_height = m_newHeight;
     return true;
   }
 }

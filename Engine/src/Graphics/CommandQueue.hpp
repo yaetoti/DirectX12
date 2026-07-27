@@ -11,7 +11,7 @@ namespace Flame {
     bool Initialize();
     void Reset();
 
-    void ExecuteCommandList(ID3D12CommandList* commandList);
+    void Execute(ID3D12CommandList* commandList);
 
     u64 Signal();
     void WaitForFence(u64 fenceValue);

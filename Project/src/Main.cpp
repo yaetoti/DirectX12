@@ -5,6 +5,8 @@
 #include "Engine.hpp"
 #include "Utils/Logger.hpp"
 
+// TODO replace asserts with own macro
+
 int wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   std::locale::global(std::locale("en-US.UTF8"));
 
